@@ -1,0 +1,13 @@
+id,name,subnet,users,criticality,soc
+H01,SOC-Server,10.0.0.0/24,5,8,1
+H02,DC01,10.0.1.0/24,300,10,0
+H03,DB-Patient,10.0.2.0/24,120,9,0
+H04,Mail-Server,10.0.1.0/24,300,8,0
+H05,Web-DMZ,172.16.0.0/24,2000,6,0
+H06,File-Server,10.0.3.0/24,250,7,0
+H07,Radiology-PC,10.0.4.0/24,40,7,0
+H08,Lab-Gateway,10.0.4.0/24,60,6,0
+H09,HR-Workstations,10.0.5.0/24,35,5,0
+H10,Backup-Server,10.0.6.0/24,10,8,0
+H11,Printer-VLAN,10.0.7.0/24,150,2,0
+H12,Guest-WiFi,192.168.50.0/24,500,1,0

@@ -1,0 +1,16 @@
+id,name,host,effort_hours,risk_reduction
+T01,Patch domain controller (critical CVE),H02,5,95
+T02,Reset privileged credentials,ALL,4,80
+T03,Isolate and rebuild patient DB replica,H03,8,90
+T04,Patch mail server RCE,H04,3,60
+T05,Deploy EDR agent on file server,H06,3,55
+T06,Verify backup integrity and offline copy,H10,4,70
+T07,Harden web DMZ firewall rules,H05,2,40
+T08,Patch radiology workstation OS,H07,3,35
+T09,Segment lab gateway VLAN,H08,4,30
+T10,Enforce MFA on HR workstations,H09,2,25
+T11,Disable legacy printer protocols,H11,1,8
+T12,Add guest Wi-Fi isolation rule,H12,1,5
+T13,Full OS migration of file server,H06,40,120
+T14,Tighten org-wide email filtering,ALL,2,30
+T15,Deploy IDS sensors on backbone,ALL,6,65

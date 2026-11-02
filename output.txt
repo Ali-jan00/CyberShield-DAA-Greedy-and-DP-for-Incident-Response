@@ -1,0 +1,126 @@
+
+========================================================================
+PART C  WORKED EXAMPLE  (12 hosts, 25 links, 3 windows, 15 tasks)
+========================================================================
+hosts=12 links=25 (compromised: L07, L12, L23) windows=[6, 8, 10] tasks=15
+
+PART A  Secure monitoring backbone (Kruskal)
+--------------------------------------------
+  L05: DC01             - Mail-Server      cost 4
+  L01: SOC-Server       - DC01             cost 4
+  L03: SOC-Server       - Backup-Server    cost 5
+  L15: Radiology-PC     - Lab-Gateway      cost 5
+  L06: DC01             - File-Server      cost 6
+  L14: File-Server      - HR-Workstations  cost 6
+  L20: Printer-VLAN     - Guest-WiFi       cost 6
+  L04: DC01             - DB-Patient       cost 7
+  L13: File-Server      - Radiology-PC     cost 7
+  L25: Printer-VLAN     - File-Server      cost 9
+  L09: Mail-Server      - Web-DMZ          cost 10
+  backbone links: 11   total cost: 69
+  isolated hosts: none
+
+PART B  Remediation schedule (multi-window DP)
+----------------------------------------------
+  Window W1 (6/6 h):
+      T05 Deploy EDR agent on file server            3 h  +55
+      T11 Disable legacy printer protocols           1 h  +8
+      T14 Tighten org-wide email filtering           2 h  +30
+  Window W2 (8/8 h):
+      T02 Reset privileged credentials               4 h  +80
+      T06 Verify backup integrity and offline copy   4 h  +70
+  Window W3 (10/10 h):
+      T01 Patch domain controller (critical CVE)     5 h  +95
+      T04 Patch mail server RCE                      3 h  +60
+      T07 Harden web DMZ firewall rules              2 h  +40
+  total risk reduction (DP optimum): 438
+  greedy risk-density baseline:      438   (gap 0, 0.0% of optimum)
+  excluded (longer than every window): T13 (40 h)
+  left unscheduled (no capacity): T03, T08, T09, T10, T12, T15
+
+========================================================================
+EXTENSION CASE  three more links become compromised: L06, L25, L09
+========================================================================
+  forest edges removed: ['L06', 'L09', 'L25']
+  forest edges added:   ['L10', 'L11', 'L24']
+  cost before: 69   after: 75
+  incremental result identical to full recomputation: True
+  incremental work: 75 link checks for 3 removed tree links (a full rerun sorts all 19 usable links)
+
+========================================================================
+SENSITIVITY TEST  remove the two highest-criticality hosts
+========================================================================
+  removed: DC01 (criticality 10), DB-Patient (criticality 9)
+
+PART A  after removal
+---------------------
+  L03: SOC-Server       - Backup-Server    cost 5
+  L15: Radiology-PC     - Lab-Gateway      cost 5
+  L02: SOC-Server       - Mail-Server      cost 6
+  L14: File-Server      - HR-Workstations  cost 6
+  L20: Printer-VLAN     - Guest-WiFi       cost 6
+  L13: File-Server      - Radiology-PC     cost 7
+  L10: Mail-Server      - File-Server      cost 8
+  L25: Printer-VLAN     - File-Server      cost 9
+  L09: Mail-Server      - Web-DMZ          cost 10
+  backbone links: 9   total cost: 62
+  isolated hosts: none
+
+PART B  after removal
+---------------------
+  Window W1 (6/6 h):
+      T08 Patch radiology workstation OS             3 h  +35
+      T11 Disable legacy printer protocols           1 h  +8
+      T14 Tighten org-wide email filtering           2 h  +30
+  Window W2 (8/8 h):
+      T06 Verify backup integrity and offline copy   4 h  +70
+      T07 Harden web DMZ firewall rules              2 h  +40
+      T10 Enforce MFA on HR workstations             2 h  +25
+  Window W3 (10/10 h):
+      T02 Reset privileged credentials               4 h  +80
+      T04 Patch mail server RCE                      3 h  +60
+      T05 Deploy EDR agent on file server            3 h  +55
+  total risk reduction (DP optimum): 403
+  greedy risk-density baseline:      403   (gap 0, 0.0% of optimum)
+  excluded (longer than every window): T13 (40 h)
+  left unscheduled (no capacity): T09, T12, T15
+
+  backbone cost 69 -> 62;  risk reduction 438 -> 403
+
+========================================================================
+EDGE CASE 1  disconnected network
+========================================================================
+  backbone: ['e1(SOC-Alpha-Web)', 'e2(Alpha-Web-Bravo-DB)']
+  other trees (minimum spanning forest): ['e4(Delta-HR-Echo-Print)']
+  isolated hosts: Delta-HR, Echo-Print, Foxtrot-Lab
+
+========================================================================
+EDGE CASE 2  equal-cost links (tie-breaking by criticality)
+========================================================================
+  all links cost 5; chosen order: ['t4(Domain-Controller-Mid-Server)', 't2(SOC-Domain-Controller)', 't3(Low-Value-Domain-Controller)']
+
+========================================================================
+EDGE CASE 3  over-demand (32 h of work, 10 h of capacity)
+========================================================================
+  windows [5, 5]; total task effort 32 h
+  W1: ['X2', 'X8'] (5/5 h)
+  W2: ['X3'] (5/5 h)
+  best partial value: 113;  left unscheduled: ['X1', 'X4', 'X6', 'X7']
+
+========================================================================
+EDGE CASE 4  task longer than every window
+========================================================================
+  windows [6, 8, 10]
+  excluded: [('H2', 30)]
+  W1: ['H3']
+  W2: ['H1']
+  W3: []
+  value: 75
+
+========================================================================
+BENCHMARK  incremental update vs full recomputation (n=200, m=20000)
+========================================================================
+  full recomputation :  25.087 ms
+  incremental update :  10.203 ms   (60000 link scans)
+  identical forests  : True
+  speed-up: 2.5x  (incremental is O(k(n+m)) for k removed tree links; full rerun is O(m log m))
